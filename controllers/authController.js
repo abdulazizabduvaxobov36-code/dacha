@@ -12,17 +12,17 @@ const generateToken = (id) => {
 // POST /auth/register
 export const register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, phone, password, role } = req.body;
 
     // Majburiy maydonlar
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: 'Ism, email va parol kiritish shart' });
+    if (!name || !phone || !password) {
+      return res.status(400).json({ message: 'Ism, telefon va parol kiritish shart' });
     }
 
-    // Email band bo'lsa
-    const exists = await User.findOne({ email });
+    // Telefon band bo'lsa
+    const exists = await User.findOne({ phone });
     if (exists) {
-      return res.status(400).json({ message: 'Bu email allaqachon ro\'yxatdan o\'tgan' });
+      return res.status(400).json({ message: 'Bu telefon allaqachon ro\'yxatdan o\'tgan' });
     }
 
     // Role tekshirish
@@ -30,7 +30,7 @@ export const register = async (req, res) => {
     const userRole = allowedRoles.includes(role) ? role : 'user';
 
     // Foydalanuvchi yaratish
-    const user = await User.create({ name, email, password, role: userRole });
+    const user = await User.create({ name, phone, password, role: userRole });
 
     res.status(201).json({
       message: 'Ro\'yxatdan o\'tildi',
@@ -38,7 +38,7 @@ export const register = async (req, res) => {
       user: {
         id:    user._id,
         name:  user.name,
-        email: user.email,
+        phone: user.phone,
         role:  user.role,
       },
     });
@@ -52,22 +52,22 @@ export const register = async (req, res) => {
 // POST /auth/login
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { phone, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Email va parol kiritish shart' });
+    if (!phone || !password) {
+      return res.status(400).json({ message: 'Telefon va parol kiritish shart' });
     }
 
     // Foydalanuvchini topish
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ phone });
     if (!user) {
-      return res.status(401).json({ message: 'Email yoki parol noto\'g\'ri' });
+      return res.status(401).json({ message: 'Telefon yoki parol noto\'g\'ri' });
     }
 
     // Parolni tekshirish
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
-      return res.status(401).json({ message: 'Email yoki parol noto\'g\'ri' });
+      return res.status(401).json({ message: 'Telefon yoki parol noto\'g\'ri' });
     }
 
     res.json({
@@ -76,7 +76,7 @@ export const login = async (req, res) => {
       user: {
         id:    user._id,
         name:  user.name,
-        email: user.email,
+        phone: user.phone,
         role:  user.role,
       },
     });
@@ -94,9 +94,8 @@ export const getMe = async (req, res) => {
     res.json({
       id:      user._id,
       name:    user.name,
-      email:   user.email,
-      role:    user.role,
       phone:   user.phone,
+      role:    user.role,
       image:   user.image,
       surname: user.surname,
       exp:     user.exp,
