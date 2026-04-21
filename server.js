@@ -1,28 +1,31 @@
-import express   from 'express';
-import cors      from 'cors';
-import mongoose  from 'mongoose';
-import dotenv    from 'dotenv';
-import authRoutes   from './routes/auth.js';
-import orderRoutes  from './routes/orders.js';
+import express from 'express';
+import cors from 'cors';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+import authRoutes from './routes/auth.js';
+import orderRoutes from './routes/orders.js';
 import reviewRoutes from './routes/reviews.js';
-import postRoutes   from './routes/posts.js';
-import userRoutes   from './routes/users.js';
+import postRoutes from './routes/posts.js';
+import userRoutes from './routes/users.js';
+import otpRoutes from './routes/otp.js';
+import { startBot } from './bot.js';
 
 dotenv.config();
 
 const app = express();
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  origin: true, // Telegram Mini App har xil domendan kelishi mumkin
   credentials: true,
 }));
 app.use(express.json({ limit: '20mb' }));
 
-app.use('/auth',     authRoutes);
-app.use('/orders',   orderRoutes);
-app.use('/reviews',  reviewRoutes);
-app.use('/posts',    postRoutes);
-app.use('/',         userRoutes);  // /chefs va /customers
+app.use('/auth', authRoutes);
+app.use('/auth', otpRoutes);
+app.use('/orders', orderRoutes);
+app.use('/reviews', reviewRoutes);
+app.use('/posts', postRoutes);
+app.use('/', userRoutes);  // /chefs va /customers
 
 app.get('/health', (_req, res) => res.json({ status: 'ok', message: '🍽️ DachaChef ishlayapti!' }));
 
@@ -31,6 +34,8 @@ mongoose
   .connect(MONGO_URI)
   .then(() => console.log('✅ MongoDB ulandi:', MONGO_URI))
   .catch((err) => console.error('❌ MongoDB xatosi:', err.message));
+
+startBot();
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
