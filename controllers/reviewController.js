@@ -13,12 +13,14 @@ export const addReview = async (req, res) => {
       return res.status(400).json({ message: 'Reyting 1 dan 5 gacha bo\'lishi kerak' });
     }
 
-    // Avval bor bo'lsa yangilaymiz, bo'lmasa yaratamiz
-    const review = await Review.findOneAndUpdate(
-      { chefPhone, customerPhone },
-      { chefName: chefName || '', customerName: customerName || '', rating, comment: comment || '' },
-      { new: true, upsert: true, setDefaultsOnInsert: true }
-    );
+    // Har safar yangi baho yaratamiz (bir mijoz ko'p baho qoldira oladi)
+    const review = await Review.create({
+      chefPhone, customerPhone,
+      chefName: chefName || '',
+      customerName: customerName || '',
+      rating,
+      comment: comment || '',
+    });
 
     res.status(201).json({ ok: true, review });
   } catch (err) {
@@ -49,13 +51,13 @@ export const getChefReviews = async (req, res) => {
   }
 };
 
-// ─── MIJOZNING OSHPAZGA BAHOSI ───────────────────────────────
+// ─── MIJOZNING OSHPAZGA BAHOLARI ─────────────────────────────
 // GET /reviews/:chefPhone/customer/:customerPhone
 export const getCustomerReview = async (req, res) => {
   try {
     const { chefPhone, customerPhone } = req.params;
-    const review = await Review.findOne({ chefPhone, customerPhone });
-    res.json(review || null);
+    const reviews = await Review.find({ chefPhone, customerPhone }).sort({ createdAt: -1 });
+    res.json(reviews); // array qaytaradi
   } catch (err) {
     res.status(500).json({ message: 'Server xatosi' });
   }

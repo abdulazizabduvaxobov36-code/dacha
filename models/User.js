@@ -3,16 +3,16 @@ import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema(
   {
-    name:     { type: String, required: true, trim: true },
-    phone:    { type: String, required: true, unique: true, trim: true },
-    email:    { type: String, default: '' },
+    name: { type: String, required: true, trim: true },
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true, minlength: 6 },
-    role:     { type: String, enum: ['user', 'oshpaz'], default: 'user' },
+    role: { type: String, enum: ['user', 'oshpaz'], default: 'user' },
 
     // Qo'shimcha maydonlar (ixtiyoriy)
-    image:    { type: String, default: '' },
-    surname:  { type: String, default: '' },
-    exp:      { type: String, default: '' },
+    phone: { type: String, default: '' },
+    image: { type: String, default: '' },
+    surname: { type: String, default: '' },
+    exp: { type: String, default: '' },
   },
   { timestamps: true }
 );

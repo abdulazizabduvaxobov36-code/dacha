@@ -3,19 +3,21 @@ import Order from '../models/Order.js';
 // PATCH /orders/:id/rating
 export const updateOrderRating = async (req, res) => {
   try {
-    const { rating, review } = req.body;
+    const { rating, review, comment } = req.body;
     const orderId = req.params.id;
+    const ratingValue = Number(rating);
+    const reviewText = (review || comment || '').toString().trim();
 
-    if (!rating || rating < 1 || rating > 5) {
+    if (!Number.isInteger(ratingValue) || ratingValue < 1 || ratingValue > 5) {
       return res.status(400).json({ message: 'Baho 1 dan 5 gacha bo\'lishi kerak' });
     }
 
     const order = await Order.findByIdAndUpdate(
       orderId,
-      { 
-        rating: parseInt(rating),
-        review: review || '',
-        ratedAt: new Date()
+      {
+        rating: ratingValue,
+        review: reviewText,
+        ratedAt: new Date(),
       },
       { new: true }
     );

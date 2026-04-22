@@ -3,16 +3,16 @@ import mongoose from 'mongoose';
 const orderSchema = new mongoose.Schema(
   {
     // Kim buyurtma berdi
-    customerPhone: { type: String, required: true },
-    customerName:  { type: String, default: '' },
+    customerPhone: { type: String, default: '' },
+    customerName: { type: String, default: '' },
 
     // Qaysi oshpaz
     chefPhone: { type: String, required: true },
-    chefName:  { type: String, default: '' },
+    chefName: { type: String, default: '' },
 
     // Buyurtma ma'lumoti
-    dishName:   { type: String, default: 'Buyurtma' },
-    amount:     { type: Number, required: true, min: 0 }, // mijoz to'lagan summa (so'm)
+    dishName: { type: String, default: 'Buyurtma' },
+    amount: { type: Number, required: true, min: 0 }, // mijoz to'lagan summa (so'm)
     commission: { type: Number, default: 0 },             // admin ulushi (so'm)
 
     // Holati
@@ -24,12 +24,7 @@ const orderSchema = new mongoose.Schema(
 
     // Chatdan kelgan buyurtma ID (ixtiyoriy)
     chatId: { type: String, default: '' },
-    note:   { type: String, default: '' },
-    
-    // Baho va izoh
-    rating: { type: Number, min: 1, max: 5, default: null },
-    review: { type: String, default: '' },
-    ratedAt: { type: Date, default: null },
+    note: { type: String, default: '' },
   },
   { timestamps: true }
 );
