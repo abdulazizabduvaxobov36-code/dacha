@@ -8,6 +8,7 @@ import reviewRoutes from './routes/reviews.js';
 import postRoutes from './routes/posts.js';
 import userRoutes from './routes/users.js';
 import otpRoutes from './routes/otp.js';
+import adminAuthRoutes from './routes/adminAuth.js';
 import { startBot } from './bot.js';
 
 dotenv.config();
@@ -22,6 +23,7 @@ app.use(express.json({ limit: '20mb' }));
 
 app.use('/auth', authRoutes);
 app.use('/auth', otpRoutes);
+app.use('/auth', adminAuthRoutes);
 app.use('/orders', orderRoutes);
 app.use('/reviews', reviewRoutes);
 app.use('/posts', postRoutes);
