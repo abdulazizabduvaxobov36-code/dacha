@@ -1,5 +1,5 @@
 import express from 'express';
-import { getBot, telegramUsers } from '../bot.js';
+import { getBot } from '../bot.js';
 
 const router = express.Router();
 const otpStore = new Map();
@@ -13,26 +13,26 @@ router.post('/send-otp', async (req, res) => {
   console.log(`[OTP] +998${phone} → ${code}`);
 
   const bot = getBot();
-  if (!bot) return res.json({ success: true, devCode: code });
-
-  if (!telegramId) {
-    return res.status(400).json({ success: false, needBot: true, message: 'Telegram botni oching va /start bosing' });
+  if (!bot) {
+    // Dev rejim — bot token yo'q
+    return res.json({ success: true, devCode: code });
   }
 
-  const user = telegramUsers.get(String(telegramId));
-  if (!user) {
-    return res.status(400).json({ success: false, needBot: true, message: 'Botda /start bosing, keyin qayta urinib ko\'ring' });
+  if (!telegramId) {
+    return res.status(400).json({ message: 'Telegram ID aniqlanmadi. Botni qayta oching.' });
   }
 
   try {
-    await bot.sendMessage(user.chatId,
+    // telegramId == chatId (private chat uchun)
+    await bot.sendMessage(
+      telegramId,
       `🔐 Tasdiqlash kodi:\n\n*${code}*\n\n⏱ 5 daqiqa amal qiladi.`,
       { parse_mode: 'Markdown' }
     );
     res.json({ success: true, message: 'Kod yuborildi' });
   } catch (err) {
     console.error('[OTP] Xato:', err.message);
-    res.status(500).json({ success: false, message: 'Telegram xabari yuborilmadi' });
+    res.status(500).json({ success: false, message: 'Kod yuborilmadi. Avval botga /start yozing.' });
   }
 });
 
