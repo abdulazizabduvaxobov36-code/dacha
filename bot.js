@@ -34,7 +34,11 @@ export const startBot = () => {
           ]]
         }
       }
-    );
+    ).then(() => {
+      console.log(`[Bot] Xabar yuborildi → ${firstName} (${chatId})`);
+    }).catch(err => {
+      console.error(`[Bot] Xabar yuborilmadi: ${err.message}`);
+    });
   });
 
   bot.on('polling_error', (err) => console.error('[Bot] Xato:', err.message));
