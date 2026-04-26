@@ -12,6 +12,14 @@ export const startBot = () => {
     return null;
   }
 
+  // Faqat production (Render) da polling — local da ishlamaydi
+  const isProduction = process.env.RENDER || process.env.NODE_ENV === 'production';
+  if (!isProduction) {
+    console.log('[Bot] Local rejim — polling o\'chirilgan (Render da ishlaydi)');
+    bot = new TelegramBot(token);
+    return bot;
+  }
+
   bot = new TelegramBot(token, { polling: true });
 
   bot.onText(/\/start/, (msg) => {
