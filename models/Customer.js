@@ -6,6 +6,7 @@ const customerSchema = new mongoose.Schema(
     firstName: { type: String, default: '' },
     lastName: { type: String, default: '' },
     image: { type: String, default: '' },
+    isBlocked: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

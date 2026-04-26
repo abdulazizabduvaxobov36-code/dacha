@@ -3,10 +3,20 @@ import Customer from '../models/Customer.js';
 
 // ─── OSHPAZLAR ───────────────────────────────────────────────
 
-// GET /chefs — barcha oshpazlar
+// GET /chefs — foydalanuvchilar uchun (bloklanganlarsiz)
 export const getAllChefs = async (req, res) => {
   try {
     const chefs = await Chef.find({ isBlocked: false }).sort({ createdAt: -1 });
+    res.json(chefs);
+  } catch (err) {
+    res.status(500).json({ message: 'Server xatosi' });
+  }
+};
+
+// GET /admin/chefs — admin uchun barcha oshpazlar (bloklanganlari bilan)
+export const getAllChefsAdmin = async (req, res) => {
+  try {
+    const chefs = await Chef.find().sort({ createdAt: -1 });
     res.json(chefs);
   } catch (err) {
     res.status(500).json({ message: 'Server xatosi' });
@@ -65,6 +75,19 @@ export const deleteChef = async (req, res) => {
   }
 };
 
+// PATCH /chefs/:phone/block — bloklash/blokdan chiqarish
+export const toggleBlockChef = async (req, res) => {
+  try {
+    const chef = await Chef.findOne({ phone: req.params.phone });
+    if (!chef) return res.status(404).json({ message: 'Oshpaz topilmadi' });
+    chef.isBlocked = !chef.isBlocked;
+    await chef.save();
+    res.json({ ok: true, isBlocked: chef.isBlocked });
+  } catch (err) {
+    res.status(500).json({ message: 'Server xatosi' });
+  }
+};
+
 // ─── MIJOZLAR ─────────────────────────────────────────────────
 
 // POST /customers — mijoz qo'shish / yangilash
@@ -114,6 +137,29 @@ export const getAllCustomers = async (req, res) => {
   try {
     const customers = await Customer.find().sort({ createdAt: -1 });
     res.json(customers);
+  } catch (err) {
+    res.status(500).json({ message: 'Server xatosi' });
+  }
+};
+
+// DELETE /customers/:phone — mijozni o'chirish
+export const deleteCustomer = async (req, res) => {
+  try {
+    await Customer.findOneAndDelete({ phone: req.params.phone });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ message: 'Server xatosi' });
+  }
+};
+
+// PATCH /customers/:phone/block — bloklash/blokdan chiqarish
+export const toggleBlockCustomer = async (req, res) => {
+  try {
+    const customer = await Customer.findOne({ phone: req.params.phone });
+    if (!customer) return res.status(404).json({ message: 'Mijoz topilmadi' });
+    customer.isBlocked = !customer.isBlocked;
+    await customer.save();
+    res.json({ ok: true, isBlocked: customer.isBlocked });
   } catch (err) {
     res.status(500).json({ message: 'Server xatosi' });
   }
