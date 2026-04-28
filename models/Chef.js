@@ -8,6 +8,7 @@ const chefSchema = new mongoose.Schema(
     exp: { type: String, default: '' },
     image: { type: String, default: '' },
     isBlocked: { type: Boolean, default: false },
+    telegramId: { type: String, default: '' },
     registeredAt: { type: Number, default: () => Date.now() },
   },
   { timestamps: true }

@@ -1,5 +1,6 @@
 import express from 'express';
 import { getBot } from '../bot.js';
+import Chef from '../models/Chef.js';
 
 const router = express.Router();
 const otpStore = new Map();
@@ -29,6 +30,8 @@ router.post('/send-otp', async (req, res) => {
       `🔐 Tasdiqlash kodi:\n\n*${code}*\n\n⏱ 5 daqiqa amal qiladi.`,
       { parse_mode: 'Markdown' }
     );
+    // telegramId ni Chef ga saqlash (oshpaz bo'lsa)
+    Chef.findOneAndUpdate({ phone }, { telegramId: String(telegramId) }).catch(() => {});
     res.json({ success: true, message: 'Kod yuborildi' });
   } catch (err) {
     console.error('[OTP] Xato:', err.message);

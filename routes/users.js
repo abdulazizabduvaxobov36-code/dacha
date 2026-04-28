@@ -1,6 +1,6 @@
 import express from 'express';
 import {
-  getAllChefs, getAllChefsAdmin, getChefByPhone, upsertChef, updateChef, deleteChef, toggleBlockChef,
+  getAllChefs, getAllChefsAdmin, getChefByPhone, upsertChef, updateChef, deleteChef, toggleBlockChef, notifyChef,
   upsertCustomer, updateCustomer, getCustomerByPhone, getAllCustomers, deleteCustomer, toggleBlockCustomer,
 } from '../controllers/userController.js';
 
@@ -13,6 +13,7 @@ router.get('/chefs/:phone', getChefByPhone);             // Bitta oshpaz
 router.post('/chefs', upsertChef);                       // Qo'shish / yangilash
 router.put('/chefs/:phone', updateChef);                 // Profil yangilash
 router.patch('/chefs/:phone/block', toggleBlockChef);    // Bloklash toggle
+router.post('/chefs/:phone/notify', notifyChef);         // Ogohlantirish yuborish
 router.delete('/chefs/:phone', deleteChef);              // O'chirish
 
 // ─── MIJOZLAR ─────────────────────────────────────────────────

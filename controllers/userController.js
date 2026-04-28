@@ -1,5 +1,6 @@
 import Chef from '../models/Chef.js';
 import Customer from '../models/Customer.js';
+import { getBot } from '../bot.js';
 
 // ─── OSHPAZLAR ───────────────────────────────────────────────
 
@@ -72,6 +73,27 @@ export const deleteChef = async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ message: 'Server xatosi' });
+  }
+};
+
+// POST /chefs/:phone/notify — oshpazga Telegram xabar yuborish
+export const notifyChef = async (req, res) => {
+  try {
+    const chef = await Chef.findOne({ phone: req.params.phone });
+    if (!chef) return res.status(404).json({ message: 'Oshpaz topilmadi' });
+    if (!chef.telegramId) return res.status(400).json({ message: 'Oshpaz hali botga /start yozmagan' });
+    const bot = getBot();
+    if (!bot) return res.status(500).json({ message: 'Bot ishlamayapti' });
+    const { message } = req.body;
+    if (!message?.trim()) return res.status(400).json({ message: 'Xabar matni kerak' });
+    await bot.sendMessage(
+      chef.telegramId,
+      `⚠️ *Admin xabari:*\n\n${message}`,
+      { parse_mode: 'Markdown' }
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ message: 'Xato: ' + err.message });
   }
 };
 

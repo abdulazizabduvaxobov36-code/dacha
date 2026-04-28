@@ -3,6 +3,16 @@ import Order from '../models/Order.js';
 // Komissiya foizi — 10%
 const COMMISSION_RATE = 0.10;
 
+// DELETE /admin/orders/clear-all — barcha buyurtmalarni o'chirish
+export const clearAllOrders = async (req, res) => {
+  try {
+    await Order.deleteMany({});
+    res.json({ ok: true, message: 'Barcha buyurtmalar o\'chirildi' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server xatosi' });
+  }
+};
+
 // ─── OSHPAZ: yangi buyurtma qo'shish ─────────────────────────
 // POST /orders
 export const createOrder = async (req, res) => {

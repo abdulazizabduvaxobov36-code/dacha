@@ -6,6 +6,7 @@ import {
   getAllOrders,
   getCommissions,
   getChefCommission,
+  clearAllOrders,
 } from '../controllers/orderController.js';
 import protect from '../middleware/auth.js';
 
@@ -20,5 +21,6 @@ router.patch('/:id/status', updateOrderStatus);    // Holatni yangilash
 router.get('/admin/orders', getAllOrders);         // Barcha buyurtmalar
 router.get('/admin/commissions', getCommissions);       // Barcha oshpazlar hisobi
 router.get('/admin/commissions/:chefPhone', getChefCommission);    // Bitta oshpaz hisobi
+router.delete('/admin/clear-all', clearAllOrders);                 // Barcha buyurtmalarni o'chirish
 
 export default router;
