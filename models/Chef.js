@@ -6,6 +6,7 @@ const chefSchema = new mongoose.Schema(
     name: { type: String, default: '' },
     surname: { type: String, default: '' },
     exp: { type: String, default: '' },
+    bio: { type: String, default: '' },
     image: { type: String, default: '' },
     isBlocked: { type: Boolean, default: false },
     telegramId: { type: String, default: '' },

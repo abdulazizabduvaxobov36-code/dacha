@@ -6,6 +6,7 @@ import {
   getAllOrders,
   getCommissions,
   getChefCommission,
+  deleteOrder,
   clearAllOrders,
 } from '../controllers/orderController.js';
 import protect from '../middleware/auth.js';
@@ -16,6 +17,7 @@ const router = express.Router();
 router.post('/', createOrder);          // Yangi buyurtma
 router.get('/chef/:chefPhone', getChefOrders);        // Oshpazning buyurtmalari + hisob
 router.patch('/:id/status', updateOrderStatus);    // Holatni yangilash
+router.delete('/:id', deleteOrder);                // Bitta buyurtmani o'chirish
 
 // ─── ADMIN endpointlari ──────────────────────────────────────
 router.get('/admin/orders', getAllOrders);         // Barcha buyurtmalar

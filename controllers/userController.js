@@ -37,12 +37,16 @@ export const getChefByPhone = async (req, res) => {
 // POST /chefs — oshpaz qo'shish / yangilash
 export const upsertChef = async (req, res) => {
   try {
-    const { phone, name, surname, exp, image } = req.body;
+    const { phone, name, surname, exp, image, bio, telegramId } = req.body;
     if (!phone) return res.status(400).json({ message: 'phone majburiy' });
+
+    const update = { name: name || '', surname: surname || '', exp: exp || '', image: image || '', registeredAt: Date.now() };
+    if (bio !== undefined) update.bio = bio;
+    if (telegramId) update.telegramId = String(telegramId);
 
     const chef = await Chef.findOneAndUpdate(
       { phone },
-      { name: name || '', surname: surname || '', exp: exp || '', image: image || '', registeredAt: Date.now() },
+      update,
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
     res.status(201).json({ ok: true, chef });
@@ -54,9 +58,12 @@ export const upsertChef = async (req, res) => {
 // PUT /chefs/:phone — oshpaz profilini yangilash
 export const updateChef = async (req, res) => {
   try {
+    const updates = { ...req.body };
+    // telegramId bo'sh bo'lsa o'chirmaymiz
+    if (!updates.telegramId) delete updates.telegramId;
     const chef = await Chef.findOneAndUpdate(
       { phone: req.params.phone },
-      { ...req.body },
+      updates,
       { new: true }
     );
     if (!chef) return res.status(404).json({ message: 'Oshpaz topilmadi' });
@@ -91,6 +98,64 @@ export const notifyChef = async (req, res) => {
       `⚠️ *Admin xabari:*\n\n${message}`,
       { parse_mode: 'Markdown' }
     );
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ message: 'Xato: ' + err.message });
+  }
+};
+
+// POST /chefs/:phone/link-telegram — mini app dan telegramId ni saqlash
+export const linkChefTelegram = async (req, res) => {
+  try {
+    const { telegramId } = req.body;
+    if (!telegramId) return res.status(400).json({ message: 'telegramId kerak' });
+    const chef = await Chef.findOneAndUpdate(
+      { phone: req.params.phone },
+      { telegramId: String(telegramId) },
+      { new: true }
+    );
+    if (!chef) return res.status(404).json({ message: 'Oshpaz topilmadi' });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ message: 'Server xatosi' });
+  }
+};
+
+// POST /notify/chef-event — mijoz xabari/buyurtma/bahosi uchun oshpazga Telegram bildirish
+export const notifyChefEvent = async (req, res) => {
+  try {
+    const { chefPhone, type, fromName, extra } = req.body;
+    if (!chefPhone) return res.status(400).json({ message: 'chefPhone kerak' });
+
+    const chef = await Chef.findOne({ phone: chefPhone });
+    if (!chef?.telegramId) return res.json({ ok: false, reason: 'telegramId yo\'q' });
+
+    const bot = getBot();
+    if (!bot) return res.json({ ok: false, reason: 'bot ishlamayapti' });
+
+    const name = fromName || 'Mijoz';
+    let text = '';
+    if (type === 'message') {
+      text = `💬 *${name}* sizga xabar yozdi!\n\nIlovani ochib javob bering.`;
+    } else if (type === 'order') {
+      const amt = extra?.amount ? `\n💰 Summa: ${Number(extra.amount).toLocaleString('uz-UZ')} so'm` : '';
+      const note = extra?.note ? `\n📝 Izoh: ${extra.note}` : '';
+      text = `🛍️ *${name}* buyurtma berdi!${amt}${note}\n\nIlovani ochib qabul qiling.`;
+    } else if (type === 'review') {
+      const stars = '⭐'.repeat(Number(extra?.rating) || 0);
+      const cmt = extra?.comment ? `\n💬 "${extra.comment}"` : '';
+      text = `${stars} *${name}* baho qo'ydi!${cmt}\n\nProfilda ko'ring.`;
+    } else {
+      text = `📩 *${name}* sizga murojaat qildi!`;
+    }
+
+    const MINI_APP_URL = process.env.MINI_APP_URL || 'https://dachachef-front.vercel.app';
+    await bot.sendMessage(chef.telegramId, text, {
+      parse_mode: 'Markdown',
+      reply_markup: {
+        inline_keyboard: [[{ text: '📱 Ilovani ochish', web_app: { url: MINI_APP_URL } }]]
+      }
+    });
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ message: 'Xato: ' + err.message });

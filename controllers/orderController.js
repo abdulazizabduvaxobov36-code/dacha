@@ -3,6 +3,16 @@ import Order from '../models/Order.js';
 // Komissiya foizi — 10%
 const COMMISSION_RATE = 0.10;
 
+// DELETE /orders/:id — bitta buyurtmani o'chirish
+export const deleteOrder = async (req, res) => {
+  try {
+    await Order.findByIdAndDelete(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ message: 'Server xatosi' });
+  }
+};
+
 // DELETE /admin/orders/clear-all — barcha buyurtmalarni o'chirish
 export const clearAllOrders = async (req, res) => {
   try {

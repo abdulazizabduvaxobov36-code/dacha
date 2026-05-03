@@ -1,6 +1,6 @@
 import express from 'express';
 import {
-  getAllChefs, getAllChefsAdmin, getChefByPhone, upsertChef, updateChef, deleteChef, toggleBlockChef, notifyChef,
+  getAllChefs, getAllChefsAdmin, getChefByPhone, upsertChef, updateChef, deleteChef, toggleBlockChef, notifyChef, notifyChefEvent, linkChefTelegram,
   upsertCustomer, updateCustomer, getCustomerByPhone, getAllCustomers, deleteCustomer, toggleBlockCustomer,
 } from '../controllers/userController.js';
 
@@ -14,7 +14,10 @@ router.post('/chefs', upsertChef);                       // Qo'shish / yangilash
 router.put('/chefs/:phone', updateChef);                 // Profil yangilash
 router.patch('/chefs/:phone/block', toggleBlockChef);    // Bloklash toggle
 router.post('/chefs/:phone/notify', notifyChef);         // Ogohlantirish yuborish
+router.post('/chefs/:phone/link-telegram', linkChefTelegram); // TelegramId ni saqlash
 router.delete('/chefs/:phone', deleteChef);              // O'chirish
+
+router.post('/notify/chef-event', notifyChefEvent);      // Mijoz xabari/buyurtma/baho bildirishi
 
 // ─── MIJOZLAR ─────────────────────────────────────────────────
 router.get('/customers', getAllCustomers);                        // Admin: barcha mijozlar

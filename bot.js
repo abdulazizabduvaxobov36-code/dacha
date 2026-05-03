@@ -1,4 +1,5 @@
 import TelegramBot from 'node-telegram-bot-api';
+import Chef from './models/Chef.js';
 
 const MINI_APP_URL = process.env.MINI_APP_URL || 'https://dachachef-front.vercel.app';
 
@@ -22,12 +23,24 @@ export const startBot = () => {
 
   bot = new TelegramBot(token, { polling: true });
 
-  bot.onText(/\/start/, (msg) => {
+  bot.onText(/\/start(.*)/, async (msg, match) => {
     const chatId = msg.chat.id;
     const telegramId = String(msg.from?.id);
     const firstName = msg.from?.first_name || 'Foydalanuvchi';
 
     telegramUsers.set(telegramId, { chatId, firstName });
+
+    // /start <phone> — oshpaz telefon raqamini yuborsa, telegramId ni DB ga saqlash
+    const phoneArg = (match[1] || '').trim().replace(/\D/g, '');
+    if (phoneArg.length === 9) {
+      try {
+        await Chef.findOneAndUpdate({ phone: phoneArg }, { telegramId }, { new: false });
+        console.log(`[Bot] telegramId ${telegramId} → oshpaz +998${phoneArg} ga saqlandi`);
+      } catch (e) {
+        console.error('[Bot] Chef telegramId saqlashda xato:', e.message);
+      }
+    }
+
     console.log(`[Bot] /start: ${firstName} (id: ${telegramId})`);
 
     bot.sendMessage(chatId,

@@ -9,6 +9,7 @@ import postRoutes from './routes/posts.js';
 import userRoutes from './routes/users.js';
 import otpRoutes from './routes/otp.js';
 import adminAuthRoutes from './routes/adminAuth.js';
+import chatRoutes from './routes/chats.js';
 import { startBot } from './bot.js';
 
 dotenv.config();
@@ -25,6 +26,7 @@ app.use('/auth', authRoutes);
 app.use('/auth', otpRoutes);
 app.use('/auth', adminAuthRoutes);
 app.use('/orders', orderRoutes);
+app.use('/chats', chatRoutes);
 app.use('/reviews', reviewRoutes);
 app.use('/posts', postRoutes);
 app.use('/', userRoutes);  // /chefs va /customers
