@@ -1,6 +1,6 @@
 import express from 'express';
 import {
-  getAllChefs, getAllChefsAdmin, getChefByPhone, upsertChef, updateChef, deleteChef, toggleBlockChef, notifyChef, notifyChefEvent, linkChefTelegram,
+  getAllChefs, getAllChefsAdmin, getChefByPhone, upsertChef, updateChef, deleteChef, toggleBlockChef, notifyChef, notifyChefEvent, linkChefTelegram, setChefOnline,
   upsertCustomer, updateCustomer, getCustomerByPhone, getAllCustomers, deleteCustomer, toggleBlockCustomer,
 } from '../controllers/userController.js';
 
@@ -15,6 +15,7 @@ router.put('/chefs/:phone', updateChef);                 // Profil yangilash
 router.patch('/chefs/:phone/block', toggleBlockChef);    // Bloklash toggle
 router.post('/chefs/:phone/notify', notifyChef);         // Ogohlantirish yuborish
 router.post('/chefs/:phone/link-telegram', linkChefTelegram); // TelegramId ni saqlash
+router.patch('/chefs/:phone/online', setChefOnline);     // Onlayn signal (heartbeat)
 router.delete('/chefs/:phone', deleteChef);              // O'chirish
 
 router.post('/notify/chef-event', notifyChefEvent);      // Mijoz xabari/buyurtma/baho bildirishi

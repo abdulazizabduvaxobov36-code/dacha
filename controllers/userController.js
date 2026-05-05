@@ -2,6 +2,20 @@ import Chef from '../models/Chef.js';
 import Customer from '../models/Customer.js';
 import { getBot } from '../bot.js';
 
+// Oshpazlarning onlayn vaqti (xotirada, server qayta ishlaganda tozalanadi)
+const chefOnlineMap = new Map(); // phone -> timestamp
+
+export const setChefOnline = (req, res) => {
+  const { phone } = req.params;
+  if (phone) chefOnlineMap.set(phone, Date.now());
+  res.json({ ok: true });
+};
+
+export const isChefOnline = (phone) => {
+  const ts = chefOnlineMap.get(phone);
+  return ts ? Date.now() - ts < 60000 : false; // 60 soniya ichida signal bo'lsa onlayn
+};
+
 // ─── OSHPAZLAR ───────────────────────────────────────────────
 
 // GET /chefs — foydalanuvchilar uchun (bloklanganlarsiz)
@@ -126,6 +140,11 @@ export const notifyChefEvent = async (req, res) => {
   try {
     const { chefPhone, type, fromName, extra } = req.body;
     if (!chefPhone) return res.status(400).json({ message: 'chefPhone kerak' });
+
+    // Oshpaz ilovada onlayn bo'lsa TG notification yubormaymiz
+    if (type === 'message' && isChefOnline(chefPhone)) {
+      return res.json({ ok: false, reason: 'chef is online in app' });
+    }
 
     const chef = await Chef.findOne({ phone: chefPhone });
     if (!chef?.telegramId) return res.json({ ok: false, reason: 'telegramId yo\'q' });
