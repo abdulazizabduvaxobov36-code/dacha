@@ -40,6 +40,16 @@ export const markRead = async (req, res) => {
   }
 };
 
+// DELETE /chats/:chatId — chatdagi barcha xabarlarni o'chirish
+export const deleteChat = async (req, res) => {
+  try {
+    await Message.deleteMany({ chatId: req.params.chatId });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ message: 'Server xatosi' });
+  }
+};
+
 // GET /chats/chef/:chefPhone — oshpazning barcha chatlari (ro'yxat uchun)
 export const getChefChats = async (req, res) => {
   try {
