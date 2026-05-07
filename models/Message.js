@@ -8,6 +8,7 @@ const messageSchema = new mongoose.Schema({
   to:     { type: String, default: '' },
   ts:     { type: String, default: '' },
   isRead: { type: Boolean, default: false },
+  deletedBy: { type: [String], default: [] },
 }, { timestamps: true });
 
 const Message = mongoose.model('Message', messageSchema);

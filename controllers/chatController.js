@@ -1,11 +1,30 @@
 import Message from '../models/Message.js';
+import Customer from '../models/Customer.js';
 
-// GET /chats/:chatId — chatdagi xabarlar
+// GET /chats/:chatId?myPhone=xxx — chatdagi xabarlar
 export const getMessages = async (req, res) => {
   try {
-    const msgs = await Message.find({ chatId: req.params.chatId })
-      .sort({ createdAt: 1 }).limit(300);
-    res.json(msgs);
+    const { chatId } = req.params;
+    const { myPhone } = req.query;
+
+    const allMsgs = await Message.find({ chatId }).sort({ createdAt: 1 }).limit(300);
+
+    // Agar myPhone berilgan bo'lsa — o'zim o'chirgan xabarlarni ko'rsatmaymiz
+    const msgs = myPhone
+      ? allMsgs.filter(m => !m.deletedBy.includes(myPhone))
+      : allMsgs;
+
+    // Hamkor o'chirganligi (partnerDeleted flag)
+    let partnerDeleted = false;
+    if (myPhone && allMsgs.length > 0) {
+      const phones = chatId.split('_');
+      const partnerPhone = phones.find(p => p !== myPhone);
+      if (partnerPhone) {
+        partnerDeleted = allMsgs.some(m => m.deletedBy.includes(partnerPhone));
+      }
+    }
+
+    res.json({ msgs, partnerDeleted });
   } catch (err) {
     res.status(500).json({ message: 'Server xatosi' });
   }
@@ -40,10 +59,16 @@ export const markRead = async (req, res) => {
   }
 };
 
-// DELETE /chats/:chatId — chatdagi barcha xabarlarni o'chirish
+// DELETE /chats/:chatId — chat o'chirilgan deb belgilash (phone body da keladi)
 export const deleteChat = async (req, res) => {
   try {
-    await Message.deleteMany({ chatId: req.params.chatId });
+    const { phone } = req.body;
+    if (!phone) return res.status(400).json({ message: 'phone talab qilinadi' });
+
+    await Message.updateMany(
+      { chatId: req.params.chatId, deletedBy: { $ne: phone } },
+      { $push: { deletedBy: phone } }
+    );
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ message: 'Server xatosi' });
@@ -54,28 +79,47 @@ export const deleteChat = async (req, res) => {
 export const getChefChats = async (req, res) => {
   try {
     const { chefPhone } = req.params;
-    // chatId format: customerPhone_chefPhone
-    const msgs = await Message.find({ chatId: { $regex: `_${chefPhone}$` } })
-      .sort({ createdAt: -1 });
 
-    // ChatId bo'yicha guruhlash
+    // Oshpaz o'chirmagan xabarlar
+    const msgs = await Message.find({
+      chatId: { $regex: `_${chefPhone}$` },
+      deletedBy: { $ne: chefPhone },
+    }).sort({ createdAt: -1 });
+
     const map = {};
     msgs.forEach(m => {
       if (!map[m.chatId]) {
+        const customerPhone = m.chatId.replace(`_${chefPhone}`, '');
         map[m.chatId] = {
           chatId: m.chatId,
-          customerPhone: m.chatId.replace(`_${chefPhone}`, ''),
+          customerPhone,
           lastMsg: m.text,
           lastSender: m.sender,
           time: m.ts,
           unread: 0,
+          partnerDeleted: false,
         };
       }
-      // Oshpazga yozilgan o'qilmagan xabarlar
       if (m.to === chefPhone && !m.isRead) map[m.chatId].unread++;
+      // Mijoz o'chirganligi
+      const customerPhone = m.chatId.replace(`_${chefPhone}`, '');
+      if (m.deletedBy.includes(customerPhone)) map[m.chatId].partnerDeleted = true;
     });
 
-    res.json(Object.values(map));
+    // Har bir chat uchun mijoz ismini olish
+    const chats = Object.values(map);
+    const phones = chats.map(c => c.customerPhone);
+    const customers = await Customer.find({ phone: { $in: phones } }, 'phone firstName lastName');
+    const customerMap = {};
+    customers.forEach(c => { customerMap[c.phone] = c; });
+
+    const result = chats.map(chat => {
+      const c = customerMap[chat.customerPhone];
+      const name = c ? `${c.firstName} ${c.lastName}`.trim() : '';
+      return { ...chat, customerName: name || null };
+    });
+
+    res.json(result);
   } catch (err) {
     res.status(500).json({ message: 'Server xatosi' });
   }
