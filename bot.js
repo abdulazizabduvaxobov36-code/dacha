@@ -62,20 +62,37 @@ export const startBot = () => {
     });
   });
 
+  // Admin /reply <userId> <matn> buyrug'i bilan foydalanuvchiga javob beradi
+  bot.onText(/\/reply (\d+) (.+)/s, async (msg, match) => {
+    const adminId = process.env.ADMIN_TELEGRAM_ID;
+    if (!adminId || String(msg.from?.id) !== String(adminId)) return;
+    const targetId = match[1];
+    const replyText = match[2].trim();
+    try {
+      await bot.sendMessage(targetId, `👤 *Admin javobi:*\n\n${replyText}`, { parse_mode: 'Markdown' });
+      bot.sendMessage(msg.chat.id, `✅ Javob yuborildi → ID: ${targetId}`).catch(() => {});
+    } catch (e) {
+      bot.sendMessage(msg.chat.id, `❌ Yuborilmadi: ${e.message}`).catch(() => {});
+    }
+  });
+
   // /start dan boshqa xabarlarni adminga forward qilish
   bot.on('message', (msg) => {
     if (msg.text?.startsWith('/')) return;
     const adminId = process.env.ADMIN_TELEGRAM_ID;
     if (!adminId) return;
+    // Admin o'zi yozgan bo'lsa forward qilmaymiz
+    if (String(msg.from?.id) === String(adminId)) return;
     const from = msg.from?.first_name || "Noma'lum";
     const userId = msg.from?.id;
     const text = msg.text || '[fayl/rasm]';
     bot.sendMessage(
       adminId,
-      `📩 *${from}* (ID: \`${userId}\`) yozdi:\n\n${text}`,
+      `📩 *${from}* (ID: \`${userId}\`) yozdi:\n\n${text}\n\n` +
+      `_Javob berish: /reply ${userId} <matn>_`,
       { parse_mode: 'Markdown' }
     ).catch(() => {});
-    bot.sendMessage(msg.chat.id, '✅ Xabaringiz adminga yuborildi!').catch(() => {});
+    bot.sendMessage(msg.chat.id, '✅ Xabaringiz adminga yuborildi. Javob kutib turing!').catch(() => {});
   });
 
   bot.on('polling_error', (err) => console.error('[Bot] Xato:', err.message));
