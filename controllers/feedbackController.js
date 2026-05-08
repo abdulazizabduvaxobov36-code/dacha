@@ -55,6 +55,33 @@ export const markFeedbackRead = async (req, res) => {
   }
 };
 
+// PATCH /admin/feedback/:id/reply — admindan javob
+export const replyToFeedback = async (req, res) => {
+  try {
+    const { reply } = req.body;
+    if (!reply?.trim()) return res.status(400).json({ message: 'Javob matni kerak' });
+    const fb = await Feedback.findByIdAndUpdate(
+      req.params.id,
+      { reply: reply.trim(), isRead: true },
+      { new: true }
+    );
+    if (!fb) return res.status(404).json({ message: 'Topilmadi' });
+    res.json({ ok: true, feedback: fb });
+  } catch (err) {
+    res.status(500).json({ message: 'Server xatosi' });
+  }
+};
+
+// GET /feedback/my/:phone — foydalanuvchi o'z xabarlarini ko'radi
+export const getMyFeedbacks = async (req, res) => {
+  try {
+    const feedbacks = await Feedback.find({ phone: req.params.phone }).sort({ createdAt: -1 }).limit(20);
+    res.json(feedbacks);
+  } catch (err) {
+    res.status(500).json({ message: 'Server xatosi' });
+  }
+};
+
 // DELETE /admin/feedback/:id — xabarni o'chirish
 export const deleteFeedback = async (req, res) => {
   try {

@@ -7,6 +7,7 @@ const feedbackSchema = new mongoose.Schema(
     role:    { type: String, enum: ['customer', 'chef'], required: true },
     message: { type: String, required: true },
     isRead:  { type: Boolean, default: false },
+    reply:   { type: String, default: '' },
   },
   { timestamps: true }
 );
