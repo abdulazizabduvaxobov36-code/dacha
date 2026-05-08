@@ -1,4 +1,6 @@
 import Feedback from '../models/Feedback.js';
+import Chef from '../models/Chef.js';
+import { getBot } from '../bot.js';
 
 // POST /feedback — mijoz yoki oshpaz adminга xabar yuboradi
 export const sendFeedback = async (req, res) => {
@@ -12,6 +14,31 @@ export const sendFeedback = async (req, res) => {
     }
 
     const fb = await Feedback.create({ phone, name: name || '', role, message: message.trim() });
+
+    // Admin Telegram lichkasiga bildirishnoma yuborish
+    const adminId = process.env.ADMIN_TELEGRAM_ID;
+    const bot = getBot();
+    if (adminId && bot) {
+      const roleLabel = role === 'chef' ? '👨‍🍳 Oshpaz' : '👤 Mijoz';
+      const displayName = name || 'Noma\'lum';
+
+      // Oshpaz bo'lsa telegramId ni olamiz (admin /reply orqali javob bera olsin)
+      let replyHint = `📞 Tel: +998${phone}`;
+      if (role === 'chef') {
+        const chef = await Chef.findOne({ phone }).select('telegramId').lean();
+        if (chef?.telegramId) {
+          replyHint += `\n💬 Javob: /reply ${chef.telegramId} <matn>`;
+        }
+      }
+
+      bot.sendMessage(
+        adminId,
+        `📩 *${roleLabel}: ${displayName}* muammo bildirdi!\n\n` +
+        `"${message.trim()}"\n\n${replyHint}`,
+        { parse_mode: 'Markdown' }
+      ).catch(() => {});
+    }
+
     res.status(201).json({ ok: true, feedback: fb });
   } catch (err) {
     res.status(500).json({ message: 'Server xatosi' });
