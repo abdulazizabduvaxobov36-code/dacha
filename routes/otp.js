@@ -1,6 +1,7 @@
 import express from 'express';
 import { getBot } from '../bot.js';
 import Chef from '../models/Chef.js';
+import TelegramPhone from '../models/TelegramPhone.js';
 
 const router = express.Router();
 const otpStore = new Map();
@@ -53,6 +54,16 @@ router.post('/verify-otp', (req, res) => {
 
   otpStore.delete(phone);
   res.json({ success: true });
+});
+
+// GET /auth/phone-by-telegram/:telegramId — bot orqali saqlangan telefonni olish
+router.get('/phone-by-telegram/:telegramId', async (req, res) => {
+  try {
+    const link = await TelegramPhone.findOne({ telegramId: req.params.telegramId });
+    res.json({ phone: link?.phone || null });
+  } catch {
+    res.json({ phone: null });
+  }
 });
 
 export default router;
