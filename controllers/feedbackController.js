@@ -1,7 +1,7 @@
 import Feedback from '../models/Feedback.js';
 import Chef from '../models/Chef.js';
 import TelegramPhone from '../models/TelegramPhone.js';
-import { getBot } from '../bot.js';
+import { sendToAdmin } from '../bot.js';
 
 // POST /feedback — mijoz yoki oshpaz adminга xabar yuboradi
 export const sendFeedback = async (req, res) => {
@@ -18,8 +18,7 @@ export const sendFeedback = async (req, res) => {
 
     // Admin Telegram lichkasiga bildirishnoma yuborish
     const adminId = process.env.ADMIN_TELEGRAM_ID;
-    const bot = getBot();
-    if (adminId && bot) {
+    if (adminId) {
       const roleLabel = role === 'chef' ? '👨‍🍳 Oshpaz' : '👤 Mijoz';
       const displayName = name || 'Noma\'lum';
 
@@ -33,16 +32,13 @@ export const sendFeedback = async (req, res) => {
         tgId = link?.telegramId || null;
       }
 
-      const replyHint = tgId
-        ? `📞 Tel: +998${phone}\n💬 Javob: /reply ${tgId} <matn>`
+      const hint = tgId
+        ? `📞 Tel: +998${phone}\n_Javob berish uchun shu xabarga Reply bosing_`
         : `📞 Tel: +998${phone}\n⚠️ Telegram ID topilmadi`;
 
-      bot.sendMessage(
-        adminId,
-        `📩 *${roleLabel}: ${displayName}* muammo bildirdi!\n\n` +
-        `"${message.trim()}"\n\n${replyHint}`,
-        { parse_mode: 'Markdown' }
-      ).catch(() => {});
+      const text = `📩 *${roleLabel}: ${displayName}* muammo bildirdi!\n\n"${message.trim()}"\n\n${hint}`;
+      // userChatId = tgId (bot'da chatId === userId private chat uchun)
+      await sendToAdmin(text, tgId);
     }
 
     res.status(201).json({ ok: true, feedback: fb });

@@ -7,6 +7,24 @@ const MINI_APP_URL = process.env.MINI_APP_URL || 'https://dachachef-front.vercel
 let bot = null;
 export const telegramUsers = new Map();
 
+// adminMsgId → userChatId (global, feedbackController ham ishlatadi)
+export const replyMap = new Map();
+
+// Adminga xabar yuborib, replyMap ga yozish
+export const sendToAdmin = async (text, userChatId) => {
+  const adminId = process.env.ADMIN_TELEGRAM_ID;
+  if (!adminId || !bot) return;
+  try {
+    const sent = await bot.sendMessage(adminId, text, { parse_mode: 'Markdown' });
+    if (userChatId) {
+      replyMap.set(sent.message_id, userChatId);
+      if (replyMap.size > 500) {
+        replyMap.delete(replyMap.keys().next().value);
+      }
+    }
+  } catch { }
+};
+
 export const startBot = () => {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) {
@@ -108,37 +126,46 @@ export const startBot = () => {
     ).catch(() => {});
   });
 
-  // Admin /reply <userId> <matn> buyrug'i bilan foydalanuvchiga javob beradi
-  bot.onText(/\/reply (\d+) (.+)/s, async (msg, match) => {
-    const adminId = process.env.ADMIN_TELEGRAM_ID;
-    if (!adminId || String(msg.from?.id) !== String(adminId)) return;
-    const targetId = match[1];
-    const replyText = match[2].trim();
-    try {
-      await bot.sendMessage(targetId, `👤 *Admin javobi:*\n\n${replyText}`, { parse_mode: 'Markdown' });
-      bot.sendMessage(msg.chat.id, `✅ Javob yuborildi → ID: ${targetId}`).catch(() => {});
-    } catch (e) {
-      bot.sendMessage(msg.chat.id, `❌ Yuborilmadi: ${e.message}`).catch(() => {});
-    }
-  });
-
   // /start dan boshqa xabarlarni adminga forward qilish
-  bot.on('message', (msg) => {
+  bot.on('message', async (msg) => {
     if (msg.text?.startsWith('/')) return;
     const adminId = process.env.ADMIN_TELEGRAM_ID;
     if (!adminId) return;
-    // Admin o'zi yozgan bo'lsa forward qilmaymiz
-    if (String(msg.from?.id) === String(adminId)) return;
+
+    // Admin o'zi yozgan bo'lsa — Reply bilan javob berayaptimi?
+    if (String(msg.from?.id) === String(adminId)) {
+      const repliedTo = msg.reply_to_message?.message_id;
+      if (repliedTo && replyMap.has(repliedTo)) {
+        const userChatId = replyMap.get(repliedTo);
+        try {
+          await bot.sendMessage(userChatId, `👤 *Admin javobi:*\n\n${msg.text}`, { parse_mode: 'Markdown' });
+          bot.sendMessage(adminId, '✅ Javob yuborildi!').catch(() => {});
+        } catch (e) {
+          bot.sendMessage(adminId, `❌ Yuborilmadi: ${e.message}`).catch(() => {});
+        }
+      }
+      return;
+    }
+
+    // Oddiy foydalanuvchi xabari — adminga yuborish
     const from = msg.from?.first_name || "Noma'lum";
-    const userId = msg.from?.id;
+    const userChatId = msg.chat.id;
     const text = msg.text || '[fayl/rasm]';
-    bot.sendMessage(
-      adminId,
-      `📩 *${from}* (ID: \`${userId}\`) yozdi:\n\n${text}\n\n` +
-      `_Javob berish: /reply ${userId} <matn>_`,
-      { parse_mode: 'Markdown' }
-    ).catch(() => {});
-    bot.sendMessage(msg.chat.id, '✅ Xabaringiz adminga yuborildi. Javob kutib turing!').catch(() => {});
+    try {
+      const sent = await bot.sendMessage(
+        adminId,
+        `📩 *${from}* yozdi:\n\n${text}\n\n_Javob berish uchun shu xabarga Reply bosing_`,
+        { parse_mode: 'Markdown' }
+      );
+      // Reply xaritasiga qo'shish (admin shu xabarga Reply bossa userga boradi)
+      replyMap.set(sent.message_id, userChatId);
+      // Xarita haddan katta bo'lib ketmasin
+      if (replyMap.size > 500) {
+        const firstKey = replyMap.keys().next().value;
+        replyMap.delete(firstKey);
+      }
+    } catch { }
+    bot.sendMessage(userChatId, '✅ Xabaringiz adminga yuborildi. Javob kutib turing!').catch(() => {});
   });
 
   bot.on('polling_error', (err) => console.error('[Bot] Xato:', err.message));
