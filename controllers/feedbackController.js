@@ -1,5 +1,6 @@
 import Feedback from '../models/Feedback.js';
 import Chef from '../models/Chef.js';
+import TelegramPhone from '../models/TelegramPhone.js';
 import { getBot } from '../bot.js';
 
 // POST /feedback — mijoz yoki oshpaz adminга xabar yuboradi
@@ -22,14 +23,19 @@ export const sendFeedback = async (req, res) => {
       const roleLabel = role === 'chef' ? '👨‍🍳 Oshpaz' : '👤 Mijoz';
       const displayName = name || 'Noma\'lum';
 
-      // Oshpaz bo'lsa telegramId ni olamiz (admin /reply orqali javob bera olsin)
-      let replyHint = `📞 Tel: +998${phone}`;
+      // TelegramId ni topish (admin /reply orqali javob bera olsin)
+      let tgId = null;
       if (role === 'chef') {
         const chef = await Chef.findOne({ phone }).select('telegramId').lean();
-        if (chef?.telegramId) {
-          replyHint += `\n💬 Javob: /reply ${chef.telegramId} <matn>`;
-        }
+        tgId = chef?.telegramId || null;
+      } else {
+        const link = await TelegramPhone.findOne({ phone }).lean();
+        tgId = link?.telegramId || null;
       }
+
+      const replyHint = tgId
+        ? `📞 Tel: +998${phone}\n💬 Javob: /reply ${tgId} <matn>`
+        : `📞 Tel: +998${phone}\n⚠️ Telegram ID topilmadi`;
 
       bot.sendMessage(
         adminId,
