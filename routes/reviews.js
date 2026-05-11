@@ -1,10 +1,12 @@
 import express from 'express';
-import { addReview, getChefReviews, getCustomerReview } from '../controllers/reviewController.js';
+import { addReview, getChefReviews, getCustomerReview, deleteReview, getAllReviews } from '../controllers/reviewController.js';
 
 const router = express.Router();
 
-router.post('/', addReview);         // Baho qo'shish
-router.get('/:chefPhone', getChefReviews);    // Oshpaz baholari
-router.get('/:chefPhone/customer/:customerPhone', getCustomerReview); // Mijozning bahosi
+router.post('/', addReview);
+router.get('/admin/all', getAllReviews);                                           // Admin: barcha izohlar
+router.get('/:chefPhone', getChefReviews);
+router.get('/:chefPhone/customer/:customerPhone', getCustomerReview);
+router.delete('/:id', deleteReview);
 
 export default router;

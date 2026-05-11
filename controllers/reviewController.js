@@ -51,6 +51,28 @@ export const getChefReviews = async (req, res) => {
   }
 };
 
+// ─── BITTA IZOHNI O'CHIRISH ───────────────────────────────────
+// DELETE /reviews/:id
+export const deleteReview = async (req, res) => {
+  try {
+    await Review.findByIdAndDelete(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ message: 'Server xatosi' });
+  }
+};
+
+// ─── BARCHA IZOHLAR (ADMIN) ───────────────────────────────────
+// GET /reviews/admin/all
+export const getAllReviews = async (req, res) => {
+  try {
+    const reviews = await Review.find({}).sort({ createdAt: -1 });
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json({ message: 'Server xatosi' });
+  }
+};
+
 // ─── MIJOZNING OSHPAZGA BAHOLARI ─────────────────────────────
 // GET /reviews/:chefPhone/customer/:customerPhone
 export const getCustomerReview = async (req, res) => {
