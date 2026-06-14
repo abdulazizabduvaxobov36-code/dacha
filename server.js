@@ -11,6 +11,8 @@ import otpRoutes from './routes/otp.js';
 import adminAuthRoutes from './routes/adminAuth.js';
 import chatRoutes from './routes/chats.js';
 import feedbackRoutes from './routes/feedback.js';
+import dachaRoutes from './routes/dachas.js';
+import chefTeamRoutes from './routes/chefTeam.js';
 import { startBot } from './bot.js';
 
 dotenv.config();
@@ -32,6 +34,8 @@ app.use('/reviews', reviewRoutes);
 app.use('/posts', postRoutes);
 app.use('/feedback', feedbackRoutes);
 app.use('/', userRoutes);  // /chefs va /customers
+app.use('/dachas', dachaRoutes);
+app.use('/chef-team', chefTeamRoutes);
 
 app.get('/health', (_req, res) => res.json({ status: 'ok', message: '🍽️ DachaChef ishlayapti!' }));
 

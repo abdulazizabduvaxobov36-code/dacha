@@ -73,7 +73,7 @@ export const startBot = () => {
             inline_keyboard: [[{ text: '🍽️ DachaChef ilovasini ochish', web_app: { url: MINI_APP_URL } }]]
           }
         }
-      ).catch(() => {});
+      ).catch(() => { });
     } else {
       // Birinchi marta — telefon so'rash
       bot.sendMessage(chatId,
@@ -86,7 +86,7 @@ export const startBot = () => {
             one_time_keyboard: true,
           }
         }
-      ).catch(() => {});
+      ).catch(() => { });
     }
   });
 
@@ -98,7 +98,7 @@ export const startBot = () => {
     // Oxirgi 9 raqamni olamiz (998901234567 → 901234567)
     const phone = rawPhone.replace(/\D/g, '').slice(-9);
     if (!phone || phone.length !== 9) {
-      bot.sendMessage(chatId, '❌ Telefon raqami noto\'g\'ri. Qaytadan urinib ko\'ring.').catch(() => {});
+      bot.sendMessage(chatId, '❌ Telefon raqami noto\'g\'ri. Qaytadan urinib ko\'ring.').catch(() => { });
       return;
     }
 
@@ -106,10 +106,10 @@ export const startBot = () => {
       { telegramId },
       { phone },
       { upsert: true, new: true }
-    ).catch(() => {});
+    ).catch(() => { });
 
     // Chef modelida telegramId saqlash (oshpaz bo'lsa)
-    Chef.findOneAndUpdate({ phone }, { telegramId }).catch(() => {});
+    Chef.findOneAndUpdate({ phone }, { telegramId }).catch(() => { });
 
     const firstName = msg.from?.first_name || 'Foydalanuvchi';
     bot.sendMessage(chatId,
@@ -123,12 +123,24 @@ export const startBot = () => {
           inline_keyboard: [[{ text: '🍽️ DachaChef ilovasini ochish', web_app: { url: MINI_APP_URL } }]]
         }
       }
-    ).catch(() => {});
+    ).catch(() => { });
   });
 
   // /start dan boshqa xabarlarni adminga forward qilish
+  const processedMsgIds = new Set();
   bot.on('message', async (msg) => {
     if (msg.text?.startsWith('/')) return;
+    if (msg.contact) return;
+    if (msg.web_app_data) return;
+    if (msg.photo || msg.video || msg.document || msg.audio || msg.sticker || msg.voice) return;
+    if (!msg.text || msg.text.trim() === '') return;
+    // Takroriy ishlamasin
+    if (processedMsgIds.has(msg.message_id)) return;
+    processedMsgIds.add(msg.message_id);
+    if (processedMsgIds.size > 1000) {
+      const first = processedMsgIds.values().next().value;
+      processedMsgIds.delete(first);
+    }
     const adminId = process.env.ADMIN_TELEGRAM_ID;
     if (!adminId) return;
 
@@ -139,9 +151,9 @@ export const startBot = () => {
         const userChatId = replyMap.get(repliedTo);
         try {
           await bot.sendMessage(userChatId, `👤 *Admin javobi:*\n\n${msg.text}`, { parse_mode: 'Markdown' });
-          bot.sendMessage(adminId, '✅ Javob yuborildi!').catch(() => {});
+          bot.sendMessage(adminId, '✅ Javob yuborildi!').catch(() => { });
         } catch (e) {
-          bot.sendMessage(adminId, `❌ Yuborilmadi: ${e.message}`).catch(() => {});
+          bot.sendMessage(adminId, `❌ Yuborilmadi: ${e.message}`).catch(() => { });
         }
       }
       return;
@@ -165,7 +177,7 @@ export const startBot = () => {
         replyMap.delete(firstKey);
       }
     } catch { }
-    bot.sendMessage(userChatId, '✅ Xabaringiz adminga yuborildi. Javob kutib turing!').catch(() => {});
+    bot.sendMessage(userChatId, '✅ Xabaringiz adminga yuborildi. Javob kutib turing!').catch(() => { });
   });
 
   bot.on('polling_error', (err) => console.error('[Bot] Xato:', err.message));
